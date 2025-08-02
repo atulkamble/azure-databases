@@ -164,16 +164,157 @@ az sql db create \
 
 ---
 
+Here’s an **Updated Azure Database Services Guide** with **More Azure CLI Commands** added for SQL Firewalls, Users, Private Endpoints, and Automation Examples. After this, I can structure it into a **Full README.md layout** if you want.
+
+---
+
+# 📊 **Azure Database Services Guide: SQL Server on VM, Azure SQL, Elastic Pools, Managed Instance, Geo-Replication, & Pricing**
+
+---
+
+## 🔐 **SQL Server Firewall Rules (Allow Azure Services & IPs)**
+
+```bash
+# Allow Azure Services to access SQL Server
+az sql server firewall-rule create \
+  --resource-group MyResourceGroup \
+  --server my-sql-server \
+  --name AllowAzureServices \
+  --start-ip-address 0.0.0.0 \
+  --end-ip-address 0.0.0.0
+
+# Add Client IP to SQL Server firewall
+az sql server firewall-rule create \
+  --resource-group MyResourceGroup \
+  --server my-sql-server \
+  --name AllowMyIP \
+  --start-ip-address <YOUR_PUBLIC_IP> \
+  --end-ip-address <YOUR_PUBLIC_IP>
+```
+
+---
+
+## 👤 **Create SQL Database Users & Roles (via CLI + SQLCMD)**
+
+```bash
+# Login to Azure SQL DB using sqlcmd
+sqlcmd -S my-sql-server.database.windows.net -U adminuser -P StrongP@ssw0rd
+
+# Inside SQLCMD - Create User & Grant Permissions
+CREATE USER appuser WITH PASSWORD = 'AppUser@123';
+ALTER ROLE db_datareader ADD MEMBER appuser;
+ALTER ROLE db_datawriter ADD MEMBER appuser;
+GO
+```
+
+---
+
+## 🔒 **Private Endpoint for Azure SQL**
+
+```bash
+az network private-endpoint create \
+  --name MySqlPrivateEndpoint \
+  --resource-group MyResourceGroup \
+  --vnet-name MyVNet \
+  --subnet MySubnet \
+  --private-connection-resource-id /subscriptions/<sub-id>/resourceGroups/MyResourceGroup/providers/Microsoft.Sql/servers/my-sql-server \
+  --group-id sqlServer \
+  --connection-name MySqlPrivateConnection
+```
+
+---
+
+## 🔄 **Automate Geo-Replication Failover**
+
+```bash
+az sql db replica set-primary \
+  --name MyDatabase \
+  --resource-group MyResourceGroupSecondary \
+  --server MySqlServerSecondary
+```
+
+---
+
+## 🏷️ **Tagging Resources for Cost Management**
+
+```bash
+az tag create --name "Environment" --value "Production"
+
+az resource tag \
+  --tags Environment=Production Owner=DBTeam \
+  --ids $(az sql db show --resource-group MyResourceGroup --server my-sql-server --name my-database --query id -o tsv)
+```
+
+---
+
+## 🚧 **Deleting SQL Server & Database (Cleanup)**
+
+```bash
+# Delete SQL Database
+az sql db delete \
+  --resource-group MyResourceGroup \
+  --server my-sql-server \
+  --name my-database \
+  --yes
+
+# Delete SQL Server
+az sql server delete \
+  --name my-sql-server \
+  --resource-group MyResourceGroup \
+  --yes
+```
+
+---
+
+## 🏗️ **Deploy SQL Resources with ARM Template (via CLI)**
+
+```bash
+az deployment group create \
+  --resource-group MyResourceGroup \
+  --template-file azure-sql-template.json
+```
+
+---
+
+## 🗂️ **Export Azure SQL Database (BACPAC to Storage Account)**
+
+```bash
+az sql db export \
+  --admin-user adminuser \
+  --admin-password StrongP@ssw0rd \
+  --storage-key-type StorageAccessKey \
+  --storage-key <STORAGE_ACCOUNT_KEY> \
+  --storage-uri https://<STORAGE_ACCOUNT>.blob.core.windows.net/<CONTAINER>/mydatabase.bacpac \
+  --name my-database \
+  --server my-sql-server \
+  --resource-group MyResourceGroup
+```
+
+---
+
+## 🛠️ **Azure PowerShell (Optional Commands)**
+
+```powershell
+# Install Azure SQL Module
+Install-Module -Name Az.Sql
+
+# Create SQL Database using PowerShell
+New-AzSqlDatabase -ResourceGroupName MyResourceGroup -ServerName my-sql-server -DatabaseName my-database -RequestedServiceObjectiveName S1
+```
+
+---
+
 ## 🚀 **Summary Steps Flow**
 
 1. Understand DBaaS model (Azure SQL, Managed Instance, SQL on VM)
 2. Decide deployment type (Single DB, Elastic Pool, MI)
-3. Set up SQL Server or Synapse (CLI or Portal)
-4. Enable Backups & Geo-Replication
-5. Connect with SSMS for database management
-6. Estimate pricing using vCore or DTU model
-7. Automate deployment & configuration with CLI or ARM/Bicep/Terraform
+3. Provision SQL Server, Database, Elastic Pool (CLI, Portal, ARM/Bicep/Terraform)
+4. Configure Firewall Rules, Private Endpoints, Security Policies
+5. Enable Automated Backups & Geo-Replication
+6. Create Users/Roles & Assign Permissions
+7. Monitor Performance, Setup Alerts & Diagnostic Logs
+8. Export/Import Database (BACPAC)
+9. Estimate Pricing via Azure Calculator (vCore or DTU)
+10. Automate Deployment & Configuration using CLI, ARM, Bicep, Terraform pipelines
 
 ---
-
-Do you want me to create a **Full README.md file with structure + code examples** for this content?
